@@ -5,7 +5,7 @@ import java.awt.Color;
 import semaforo.gui.MainWindow;
 
 public class BufferLimitado{
-	final int size = 10;
+	int size = 10;
 	double buffer[] = new double[size];
 	int inBuf = 0, outBuf = 0;
 	MainWindow interfaz;
@@ -13,41 +13,43 @@ public class BufferLimitado{
 	SemaforoBinario mutex = new SemaforoBinario(true);
 	SemaforoContador isEmpty = new SemaforoContador(0);
 	SemaforoContador isFull = new SemaforoContador(size);
+	int i = 0;
 	
-	public BufferLimitado(MainWindow interfaz){
+	public BufferLimitado(MainWindow interfaz, int size){
 		this.interfaz = interfaz;
+		this.size = size;
+		buffer = new double[size];
+		isFull = new SemaforoContador(size);
 	}
 	
 	public void deposit(double value){
-		isFull.P(); //espera si el buffer esta lleno
-		
-		//interfaz.CambiarColor("productor", Color.gray);
-		interfaz.CambiarColor("productor", Color.green);
-		mutex.P(); //asegura la exclusión mutua
-		
-		//interfaz.CambiarColor("consumidor", Color.gray);
-		interfaz.CambiarColor("consumidor", Color.red);
-		buffer[inBuf] = value;
-		inBuf = (inBuf + 1) % size;
-		mutex.V();
-		isEmpty.V(); //notifica a algún consumidor en espera
-
+		isFull.P(); 
+			interfaz.CambiarColor("productor", Color.green);
+			mutex.P(); 
+				interfaz.CambiarColor("consumidor", Color.red);
+				buffer[inBuf] = value;
+				i++;
+				interfaz.buffers[i-1].setBackground(Color.CYAN);
+				inBuf = (inBuf + 1) % size;
+			mutex.V();
+		isEmpty.V();
 	}
 	
 	public double fetch(){	
 		double value;
-		isEmpty.P(); // esperar si el buffer está vacío
+		isEmpty.P();
 		interfaz.CambiarColor("consumidor", Color.green);
 		
-		//interfaz.CambiarColor("consumidor", Color.gray);
-			mutex.P(); // asegura la exclusión mutua
+			mutex.P();
 			interfaz.CambiarColor("productor",Color.red);
 			
-			//interfaz.CambiarColor("productor", Color.gray);
-				value = buffer[outBuf]; // lee desde el buffer
+				value = buffer[outBuf];
 				outBuf = (outBuf+1) % size;
+				
+				interfaz.buffers[i-1].setBackground(Color.yellow);
+				i--;
 			mutex.V();
-		isFull.V(); // notifica a cualquier productor en espera
+		isFull.V();
 		
 		return value;
 	}
