@@ -28,8 +28,6 @@ public class BufferLimitado{
 			mutex.P(); 
 				interfaz.CambiarColor("consumidor", Color.red);
 				buffer[inBuf] = value;
-				i++;
-				interfaz.buffers[i-1].setBackground(Color.CYAN);
 				inBuf = (inBuf + 1) % size;
 			mutex.V();
 		isEmpty.V();
@@ -39,15 +37,10 @@ public class BufferLimitado{
 		double value;
 		isEmpty.P();
 		interfaz.CambiarColor("consumidor", Color.green);
-		
 			mutex.P();
 			interfaz.CambiarColor("productor",Color.red);
-			
 				value = buffer[outBuf];
 				outBuf = (outBuf+1) % size;
-				
-				interfaz.buffers[i-1].setBackground(Color.yellow);
-				i--;
 			mutex.V();
 		isFull.V();
 		
